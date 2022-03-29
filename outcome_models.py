@@ -26,9 +26,9 @@ def propensity_score(outcomes, treatments, confounder):
     for k in np.arange(nb_treatments):
         if k == 0:
             if confounder is not None:
-                data = np.concatenate((outcomes[:, k: k+nb_treatments], confounder), axis=1)
+                data = np.concatenate((outcomes[:, :nb_treatments], confounder), axis=1)
             else:
-                data = outcomes[:, k: k+nb_treatments]
+                data = outcomes[:, :nb_treatments]
             target = treatments[:, k]
         else:
             if confounder is not None:
@@ -62,18 +62,14 @@ def ip_weights(strategy, outcomes, treatments, confounder, model):
         # predictions
         prob = model.predict_proba(x)
 
-        # equation
-        h = []
-        target = treatments[:, k]
-        for i in np.arange(prob.shape[0]):
-            h.append(prob[i][int(target[i])])
-
         if k == 0:
-            s_w.append(prob[:, strategy[k]] ** -1)
-            s.append(np.array(h) ** -1)
+
+            # revoir commentaire si c'est un ps ou un IPW
+            s_w.append(prob[:, strategy[0]] ** -1)
+            s.append(prob[:, 1] ** -1)
         else:
             s_w.append(s[-1] * prob[:, strategy[k]] ** -1)
-            s.append(s[-1] * np.array(h) ** -1)
+            s.append(s[-1] * prob[:, 1]** -1)
 
     return np.array(s).T, np.array(s_w).T
 
